@@ -20,6 +20,18 @@ from PySide6.QtWidgets import (
 
 from services.recording.recorder import Recorder
 
+from core.app_state import AppState
+
+from database.repository import (
+    save_note
+)
+
+from database.repository import (
+    save_note,
+    get_notes
+)
+
+
 
 class RecordingPage(QWidget):
 
@@ -48,6 +60,19 @@ class RecordingPage(QWidget):
         # =================
         # 左側
         # =================
+
+        self.meeting_title_label = QLabel(
+            "会議未選択"
+)
+
+        self.meeting_title_label.setStyleSheet("""
+            font-size:20px;
+            font-weight:bold;
+        """)
+
+        self.meeting_title_label.setAlignment(
+            Qt.AlignmentFlag.AlignCenter
+        )
 
         left = QVBoxLayout()
 
@@ -109,6 +134,10 @@ class RecordingPage(QWidget):
 
         left.addStretch()
 
+        left.addWidget(
+            self.meeting_title_label
+        )
+
         left.addWidget(self.mic_label)
 
         left.addWidget(self.status_label)
@@ -156,9 +185,33 @@ class RecordingPage(QWidget):
         layout.addLayout(left, 2)
         layout.addLayout(right, 1)
 
+        self.page_timer = QTimer()
+
+        self.page_timer.timeout.connect(
+            self.update_meeting_title
+        )
+
+        self.page_timer.start(500)
+
         self.send_button.clicked.connect(
             self.save_memo
         )
+
+        self.page_timer = QTimer()
+
+        self.page_timer.timeout.connect(
+            self.check_meeting_change
+        )
+
+        self.page_timer.start(1000)
+
+    def check_meeting_change(self):
+
+        if AppState.meeting_changed:
+
+            self.load_notes()
+
+            AppState.meeting_changed = False
 
     # ==================================
     # 録音開始/停止切り替え
@@ -191,8 +244,13 @@ class RecordingPage(QWidget):
             "%Y%m%d_%H%M%S"
         )
 
+        meeting_id = AppState.current_meeting_id
+
+        if meeting_id is None:
+            meeting_id = "unknown"
+
         self.current_file_path = (
-            f"data/recordings/{timestamp}.wav"
+            f"data/recordings/meeting_{meeting_id}_{timestamp}.wav"
         )
 
         self.recorder.start_recording(
@@ -308,36 +366,54 @@ class RecordingPage(QWidget):
     def save_memo(self):
 
         memo_text = (
-            self.memo_area.toPlainText()
+            self.memo_area
+            .toPlainText()
             .strip()
         )
 
         if not memo_text:
             return
 
+        if AppState.current_meeting_id is None:
+            return
+
         timestamp = (
             self.timer_label.text()
         )
 
-        display_text = (
-            f"[{timestamp}] {memo_text}"
+        save_note(
+            AppState.current_meeting_id,
+            timestamp,
+            memo_text
         )
 
         self.memo_list.addItem(
-            display_text
+            f"[{timestamp}] {memo_text}"
         )
 
         self.memo_area.clear()
 
-class Note(Base):
+    def load_notes(self):
 
-    __tablename__ = "notes"
+        self.memo_list.clear()
 
-    id = Column(
-        Integer,
-        primary_key=True
-    )
+        if AppState.current_meeting_id is None:
+            return
 
-    timestamp = Column(String)
+        notes = get_notes(
+            AppState.current_meeting_id
+        )
 
-    content = Column(Text)
+        for note in notes:
+
+            self.memo_list.addItem(
+                f"[{note.timestamp}] {note.content}"
+            )
+
+    def update_meeting_title(self):
+
+        if AppState.current_meeting_title:
+
+            self.meeting_title_label.setText(
+                f"会議名:\n{AppState.current_meeting_title}"
+            )

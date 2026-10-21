@@ -1,7 +1,11 @@
 from database.db import SessionLocal
 from database.models import Settings
 from database.models import Meeting
-
+from database.models import (
+    Settings,
+    Meeting,
+    Note
+)
 
 def save_settings(
     teams_url,
@@ -70,3 +74,42 @@ def get_meetings():
     db.close()
 
     return meetings
+
+def save_note(
+    meeting_id,
+    timestamp,
+    content
+):
+
+    db = SessionLocal()
+
+    note = Note(
+        meeting_id=meeting_id,
+        timestamp=timestamp,
+        content=content
+    )
+
+    db.add(note)
+
+    db.commit()
+
+    db.close()
+
+def get_notes(
+    meeting_id
+):
+
+    db = SessionLocal()
+
+    notes = (
+        db.query(Note)
+        .filter(
+            Note.meeting_id
+            == meeting_id
+        )
+        .all()
+    )
+
+    db.close()
+
+    return notes

@@ -8,6 +8,7 @@ from sqlalchemy import (
 
 from sqlalchemy.orm import DeclarativeBase
 from datetime import datetime
+from sqlalchemy import ForeignKey
 
 
 class Base(DeclarativeBase):
@@ -42,3 +43,21 @@ class Meeting (Base):
         DateTime,
         default=datetime.now
     )
+
+class Note(Base):
+
+    __tablename__ = "notes"
+
+    id = Column(
+        Integer,
+        primary_key=True
+    )
+
+    meeting_id = Column(
+        Integer,
+        ForeignKey("meetings.id")
+    )
+
+    timestamp = Column(String)
+
+    content = Column(Text)

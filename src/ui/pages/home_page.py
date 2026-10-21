@@ -18,6 +18,7 @@ from database.repository import (
 from PySide6.QtWidgets import QPushButton
 from PySide6.QtWidgets import QListWidget
 from PySide6.QtWidgets import QInputDialog
+from core.app_state import AppState
 
 
 class HomePage(QWidget):
@@ -56,7 +57,13 @@ class HomePage(QWidget):
             self.create_new_meeting
         )
 
+        self.meeting_list.itemClicked.connect(
+            self.select_meeting
+        )
+
         self.load_meetings()
+
+        self.meeting_selected_callback = None
 
     def create_new_meeting(self):
         title, ok = QInputDialog.getText(
@@ -83,14 +90,32 @@ class HomePage(QWidget):
                 meeting.title
             )
 
-    def load_meetings(self):
-
-        self.meeting_list.clear()
+    def select_meeting(self, item):
 
         meetings = get_meetings()
 
         for meeting in meetings:
 
-            self.meeting_list.addItem(
-                meeting.title
-            )
+            if meeting.title == item.text():
+
+                AppState.current_meeting_id = (
+                    meeting.id
+                )
+
+                AppState.current_meeting_title = (
+                    meeting.title
+                )
+
+                AppState.meeting_changed = True
+
+                print(
+                    "選択:",
+                    meeting.id,
+                    meeting.title
+                )
+
+                if self.meeting_selected_callback:
+
+                    self.meeting_selected_callback()
+
+                break 

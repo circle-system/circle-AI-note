@@ -30,6 +30,11 @@ class MainWindow(QMainWindow):
         self.pages = QStackedWidget()
 
         self.home_page = HomePage()
+
+        self.home_page.meeting_selected_callback = (
+            self.open_recording_page
+        )
+
         self.recording_page = RecordingPage()
         self.settings_page = SettingsPage()
 
@@ -56,4 +61,10 @@ class MainWindow(QMainWindow):
             lambda: self.pages.setCurrentWidget(
                 self.settings_page
             )
+        )
+
+    def open_recording_page(self):
+
+        self.pages.setCurrentWidget(
+            self.recording_page
         )
