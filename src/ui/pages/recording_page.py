@@ -15,6 +15,7 @@ from PySide6.QtWidgets import (
     QLabel,
     QHBoxLayout,
     QVBoxLayout,
+    QListWidget
 )
 
 from services.recording.recorder import Recorder
@@ -138,14 +139,26 @@ class RecordingPage(QWidget):
             "保存"
         )
 
+        self.memo_list = QListWidget()
+
         right.addWidget(memo_title)
 
         right.addWidget(self.memo_area)
 
         right.addWidget(self.send_button)
 
+        right.addWidget(
+            QLabel("保存済みメモ")
+        )
+
+        right.addWidget(self.memo_list)
+
         layout.addLayout(left, 2)
         layout.addLayout(right, 1)
+
+        self.send_button.clicked.connect(
+            self.save_memo
+        )
 
     # ==================================
     # 録音開始/停止切り替え
@@ -291,3 +304,40 @@ class RecordingPage(QWidget):
         self.timer_label.setText(
             f"{hours:02}:{minutes:02}:{seconds:02}"
         )
+
+    def save_memo(self):
+
+        memo_text = (
+            self.memo_area.toPlainText()
+            .strip()
+        )
+
+        if not memo_text:
+            return
+
+        timestamp = (
+            self.timer_label.text()
+        )
+
+        display_text = (
+            f"[{timestamp}] {memo_text}"
+        )
+
+        self.memo_list.addItem(
+            display_text
+        )
+
+        self.memo_area.clear()
+
+class Note(Base):
+
+    __tablename__ = "notes"
+
+    id = Column(
+        Integer,
+        primary_key=True
+    )
+
+    timestamp = Column(String)
+
+    content = Column(Text)
