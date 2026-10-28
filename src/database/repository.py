@@ -59,6 +59,24 @@ def create_meeting(title):
 
     return meeting
 
+def get_meeting(
+    meeting_id
+):
+
+    db = SessionLocal()
+
+    meeting = (
+        db.query(Meeting)
+        .filter(
+            Meeting.id == meeting_id
+        )
+        .first()
+    )
+
+    db.close()
+
+    return meeting
+
 def get_meetings():
 
     db = SessionLocal()
@@ -74,6 +92,7 @@ def get_meetings():
     db.close()
 
     return meetings
+
 
 def save_note(
     meeting_id,
@@ -113,3 +132,94 @@ def get_notes(
     db.close()
 
     return notes
+
+def update_meeting_audio(
+    meeting_id,
+    audio_path
+):
+
+    db = SessionLocal()
+
+    meeting = (
+        db.query(Meeting)
+        .filter(
+            Meeting.id == meeting_id
+        )
+        .first()
+    )
+
+    if meeting:
+
+        meeting.audio_path = (
+            audio_path
+        )
+
+        db.commit()
+
+    db.close()
+
+def save_transcript(
+    meeting_id,
+    transcript
+):
+
+    db = SessionLocal()
+
+    meeting = (
+        db.query(Meeting)
+        .filter(
+            Meeting.id == meeting_id
+        )
+        .first()
+    )
+
+    if meeting:
+
+        meeting.transcript = (
+            transcript
+        )
+
+        db.commit()
+
+    db.close()
+
+def save_minutes(
+    meeting_id,
+    minutes
+):
+
+    db = SessionLocal()
+
+    meeting = (
+        db.query(Meeting)
+        .filter(
+            Meeting.id == meeting_id
+        )
+        .first()
+    )
+
+    if meeting:
+
+        meeting.minutes = minutes
+
+        db.commit()
+
+    db.close()
+
+def get_meeting(
+    meeting_id
+):
+
+    db = SessionLocal()
+
+    meeting = (
+        db.query(Meeting)
+        .filter(
+            Meeting.id == meeting_id
+        )
+        .first()
+    )
+
+    db.close()
+
+    return meeting

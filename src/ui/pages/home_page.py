@@ -114,8 +114,13 @@ class HomePage(QWidget):
                     meeting.title
                 )
 
+                print(
+                    "現在のタイトル:",
+                    AppState.current_meeting_title
+                )
+
                 if self.meeting_selected_callback:
 
                     self.meeting_selected_callback()
 
-                break 
+                break

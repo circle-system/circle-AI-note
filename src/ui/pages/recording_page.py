@@ -28,9 +28,27 @@ from database.repository import (
 
 from database.repository import (
     save_note,
-    get_notes
+    get_notes,
+    update_meeting_audio
+
 )
 
+from services.speech.speech_service import (
+    SpeechService
+)
+
+from database.repository import (
+    save_transcript
+)
+
+from services.ai.minutes_service import (
+    MinutesService
+)
+
+from database.repository import (
+    save_minutes,
+    get_meeting
+)
 
 
 class RecordingPage(QWidget):
@@ -132,6 +150,30 @@ class RecordingPage(QWidget):
             self.toggle_record
         )
 
+        self.transcript_button = QPushButton(
+            "文字起こし"
+        )
+
+        self.minutes_button = QPushButton(
+            "議事録生成"
+        )
+
+        self.minutes_button.clicked.connect(
+            self.generate_minutes
+        )
+
+        self.transcript_button.clicked.connect(
+            self.transcribe_audio
+        )
+
+        left.addWidget(
+            self.transcript_button
+        )
+
+        left.addWidget(
+            self.minutes_button
+        )
+
         left.addStretch()
 
         left.addWidget(
@@ -147,6 +189,8 @@ class RecordingPage(QWidget):
         left.addWidget(self.file_label)
 
         left.addWidget(self.record_button)
+
+        left.addWidget(self.transcript_button)
 
         left.addStretch()
 
@@ -182,8 +226,52 @@ class RecordingPage(QWidget):
 
         right.addWidget(self.memo_list)
 
+        # =====================
+        # 文字起こし結果
+        # =====================
+
+        right.addWidget(
+             QLabel("文字起こし")
+        )
+        
+        self.transcript_area = QTextEdit()
+        
+        self.transcript_area.setReadOnly(
+            True
+        )
+        
+        right.addWidget(
+            self.transcript_area
+        )
+
+        # =====================
+        # 議事録
+        # =====================
+
+        right.addWidget(
+            QLabel("議事録")
+        )
+
+        self.minutes_area = QTextEdit()
+
+        self.minutes_area.setReadOnly(
+            True
+        )
+
+        right.addWidget(
+            self.minutes_area
+        )
+
+        right.addWidget(self.memo_list)
+
         layout.addLayout(left, 2)
         layout.addLayout(right, 1)
+
+        self.loaded_meeting_id = None
+
+        self.send_button.clicked.connect(
+            self.save_memo
+        )
 
         self.page_timer = QTimer()
 
@@ -193,17 +281,15 @@ class RecordingPage(QWidget):
 
         self.page_timer.start(500)
 
-        self.send_button.clicked.connect(
-            self.save_memo
+        self.speech_service = (
+            SpeechService()
         )
 
-        self.page_timer = QTimer()
-
-        self.page_timer.timeout.connect(
-            self.check_meeting_change
+        self.minutes_service = (
+            MinutesService()
         )
 
-        self.page_timer.start(1000)
+        
 
     def check_meeting_change(self):
 
@@ -305,6 +391,13 @@ class RecordingPage(QWidget):
             self.recorder.stop_recording()
         )
 
+        if AppState.current_meeting_id:
+
+            update_meeting_audio(
+                AppState.current_meeting_id,
+                saved_file
+            )
+
         self.timer.stop()
 
         self.is_recording = False
@@ -387,9 +480,9 @@ class RecordingPage(QWidget):
             memo_text
         )
 
-        self.memo_list.addItem(
-            f"[{timestamp}] {memo_text}"
-        )
+        
+
+        self.load_notes()
 
         self.memo_area.clear()
 
@@ -416,4 +509,123 @@ class RecordingPage(QWidget):
 
             self.meeting_title_label.setText(
                 f"会議名:\n{AppState.current_meeting_title}"
+            )
+
+        if (
+            AppState.current_meeting_id
+            != self.loaded_meeting_id
+        ):
+
+            self.loaded_meeting_id = (
+                AppState.current_meeting_id
+            )
+
+            self.load_notes()
+            self.load_minutes()
+            self.load_minutes()
+
+    def transcribe_audio(self):
+
+        if self.is_recording:
+
+            print(
+                "録音中は文字起こしできません"
+            )
+
+            return
+
+        if not self.current_file_path:
+
+            return
+
+
+        transcript = (
+            self.speech_service
+            .transcribe_file(
+                self.current_file_path
+            )
+        )
+
+        save_transcript(
+            AppState.current_meeting_id,
+            transcript
+        )
+
+        self.transcript_area.setPlainText(
+            transcript
+        )
+
+        print()
+        print("=====文字起こし結果=====")
+        self.transcript_area.setPlainText(
+            transcript
+        )
+
+    def generate_minutes(self):
+
+        if AppState.current_meeting_id is None:
+            return
+
+        meeting = get_meeting(
+            AppState.current_meeting_id
+        )
+
+        if not meeting:
+            return
+
+        notes = []
+
+        for i in range(
+            self.memo_list.count()
+        ):
+
+            notes.append(
+                self.memo_list.item(i).text()
+            )
+
+        minutes = (
+            self.minutes_service
+            .generate_minutes(
+                meeting.transcript or "",
+                "\n".join(notes)
+            ) 
+        )
+
+        self.minutes_area.setPlainText(
+            minutes
+        )
+
+        save_minutes(
+            AppState.current_meeting_id,
+            minutes
+        )
+
+    def load_minutes(self):
+
+        if AppState.current_meeting_id is None:
+            return
+
+        meeting = get_meeting(
+            AppState.current_meeting_id
+        )
+
+        if meeting:
+
+            self.minutes_area.setPlainText(
+                meeting.minutes or ""
+            )
+
+    def load_transcript(self):
+
+        if AppState.current_meeting_id is None:
+            return
+
+        meeting = get_meeting(
+            AppState.current_meeting_id
+        )
+
+        if meeting:
+
+            self.transcript_area.setPlainText(
+                meeting.transcript or ""
             )

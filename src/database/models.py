@@ -27,17 +27,22 @@ class Settings(Base):
 
 
 
-class Meeting (Base):
+class Meeting(Base):
 
     __tablename__ = "meetings"
 
-    id = Column(Integer, primary_key=True)
+    id = Column(
+        Integer,
+        primary_key=True
+    )
 
     title = Column(String)
 
     transcript = Column(Text)
 
     minutes = Column(Text)
+
+    audio_path = Column(String)
 
     created_at = Column(
         DateTime,
