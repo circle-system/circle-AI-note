@@ -16,13 +16,16 @@ class Base(DeclarativeBase):
 
 
 class Settings(Base):
+
     __tablename__ = "settings"
 
     id = Column(Integer, primary_key=True)
 
     teams_url = Column(String)
+
     sharepoint_url = Column(String)
-    document_format = Column(String)
+
+    file_format = Column(String)
 
 
 
@@ -66,3 +69,17 @@ class Note(Base):
     timestamp = Column(String)
 
     content = Column(Text)
+
+class Person(Base):
+
+    __tablename__ = "persons"
+
+    id = Column(
+        Integer,
+        primary_key=True
+    )
+
+    name = Column(
+        String,
+        nullable=False
+    )

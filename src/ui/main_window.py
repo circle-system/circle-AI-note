@@ -6,7 +6,8 @@ from PySide6.QtWidgets import (
     QHBoxLayout,
     QStackedWidget,
 )
-
+from pathlib import Path
+from PySide6.QtGui import QIcon
 from ui.widgets.sidebar import Sidebar
 from ui.pages.home_page import HomePage
 from ui.pages.recording_page import RecordingPage
@@ -19,6 +20,14 @@ class MainWindow(QMainWindow):
 
         self.setWindowTitle("AI Minutes")
         self.resize(1200, 800)
+        ICON_PATH = (
+            Path(__file__).resolve().parent.parent
+            / "icon.ico"
+        )
+
+        self.setWindowIcon(
+            QIcon(str(ICON_PATH))
+        )
 
         central = QWidget()
         self.setCentralWidget(central)

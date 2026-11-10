@@ -1,1 +1,27 @@
 /src/data/recordings/*.wav
+
+# Python
+__pycache__/
+*.pyc
+
+# Virtual Environment
+venv/
+
+# PyInstaller
+build/
+dist/
+*.spec
+
+# Database
+data/database.db
+
+# User Data
+data/recordings/
+data/pdf/
+data/minutes/
+
+# VSCode
+.vscode/
+
+# Logs
+*.log

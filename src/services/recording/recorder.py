@@ -1,6 +1,7 @@
 import sounddevice as sd
-import soundfile as sf
-
+from PySide6.QtWidgets import QMessageBox
+import numpy as np
+import wave
 
 class Recorder:
 
@@ -23,6 +24,8 @@ class Recorder:
         time,
         status
     ):
+
+        
 
         self.recording_data.append(
             indata.copy()
@@ -51,6 +54,11 @@ class Recorder:
 
         self.stream.close()
 
+        if len(self.recording_data) == 0:
+
+            raise RuntimeError(
+                "録音データ数0"
+            )
         import numpy as np
 
         audio = np.concatenate(
@@ -58,10 +66,29 @@ class Recorder:
             axis=0
         )
 
-        sf.write(
+        audio = (
+            audio * 32767
+        ).astype(np.int16)
+
+        with wave.open(
             self.filepath,
-            audio,
-            self.sample_rate
-        )
+            "wb"
+        ) as wav_file:
+
+            wav_file.setnchannels(
+                self.channels
+            )
+
+            wav_file.setsampwidth(
+                2
+            )
+
+            wav_file.setframerate(
+                self.sample_rate
+            )
+
+            wav_file.writeframes(
+                audio.tobytes()
+            )
 
         return self.filepath

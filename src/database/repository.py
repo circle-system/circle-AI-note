@@ -4,27 +4,30 @@ from database.models import Meeting
 from database.models import (
     Settings,
     Meeting,
-    Note
+    Note,
+    Person
 )
 
 def save_settings(
     teams_url,
-    sharepoint_url,
-    document_format
+    file_format
 ):
 
     db = SessionLocal()
 
-    setting = db.query(Settings).first()
+    settings = (
+        db.query(Settings)
+        .first()
+    )
 
-    if setting is None:
-        setting = Settings()
+    if settings is None:
 
-    setting.teams_url = teams_url
-    setting.sharepoint_url = sharepoint_url
-    setting.document_format = document_format
+        settings = Settings()
 
-    db.add(setting)
+        db.add(settings)
+
+    settings.teams_url = teams_url
+    settings.file_format = file_format
 
     db.commit()
 
@@ -223,3 +226,54 @@ def get_meeting(
     db.close()
 
     return meeting
+
+def add_person(name):
+
+    print("DB登録:", name)
+
+    db = SessionLocal()
+
+    person = Person(
+        name=name
+    )
+
+    db.add(person)
+
+    db.commit()
+
+    db.close()
+
+    print("DB登録完了")
+
+def get_persons():
+
+    db = SessionLocal()
+
+    persons = (
+        db.query(Person)
+        .all()
+    )
+
+    db.close()
+
+    return persons
+
+def delete_person_by_name(name):
+
+    db = SessionLocal()
+
+    person = (
+        db.query(Person)
+        .filter(
+            Person.name == name
+        )
+        .first()
+    )
+
+    if person:
+
+        db.delete(person)
+
+        db.commit()
+
+    db.close()

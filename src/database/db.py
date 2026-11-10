@@ -1,15 +1,34 @@
-# src/database/db.py
-
 from pathlib import Path
 
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 
-BASE_DIR = Path(__file__).resolve().parent.parent.parent
+# -------------------
+# データ保存先
+# -------------------
 
-DATABASE_PATH = BASE_DIR / "data" / "database.db"
+APP_DIR = (
+    Path.home()
+    / "AI_Minutes"
+)
 
-DATABASE_URL = f"sqlite:///{DATABASE_PATH}"
+APP_DIR.mkdir(
+    parents=True,
+    exist_ok=True
+)
+
+DATABASE_PATH = (
+    APP_DIR
+    / "database.db"
+)
+
+DATABASE_URL = (
+    f"sqlite:///{DATABASE_PATH}"
+)
+
+# -------------------
+# SQLAlchemy
+# -------------------
 
 engine = create_engine(
     DATABASE_URL,
